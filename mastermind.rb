@@ -33,9 +33,9 @@ end
 
 class StartGame
   def initialize(maker, rounds)
+    Rules.show
     puts "PRESS ENTER TO START THE GAME"
     gets.chomp
-    Rules.show
     if maker == "BREAKER"
       Player.do_round(Secret.code(maker),rounds)
     elsif maker == "MAKER"
@@ -108,25 +108,28 @@ end
 class Round
   def self.do(secret_code, guessed_code, rounds)
     @guess_code = guessed_code
-    @secret_code = secret_code
+    @secret_code = secret_code.join.split('')
     @response = ''
     @round = 0
     @temporary_hold = []
     @guess_code.each_with_index do |k, i|
-      if @secret_code[i].to_s == @guess_code[i] && (@temporary_hold.include?([@guess_code[i],'O']))
-        @response = @response.gsub('O', '')
-        @response += 'X'
-      elsif @secret_code[i].to_s == @guess_code[i]
+      if @secret_code[i] == @guess_code[i] && (@temporary_hold.include?([@guess_code[i],'O']))
+        next
+      elsif @secret_code[i] == @guess_code[i]
         @response += 'X'
         @temporary_hold.push([@guess_code[i],'X'])
-      elsif @secret_code.join('').include?(@guess_code[i]) && (@temporary_hold.include?([@guess_code[i],'X']))
+        if @secret_code.count(@guess_code[i]) > 1
+          @temporary_hold.push([@guess_code[i],'O'])
+          @response += 'O'
+        end
+      elsif @secret_code.join.include?(@guess_code[i]) && (@temporary_hold.include?([@guess_code[i],'X']))
         next
-      elsif @secret_code.join('').include?(@guess_code[i]) && !(@temporary_hold.include?([@guess_code[i],'O']))
+      elsif @secret_code.join.include?(@guess_code[i]) && !(@temporary_hold.include?([@guess_code[i],'O']))
         @response +='O'
         @temporary_hold.push([@guess_code[i],'O'])
       end
-      @round += 1
     end
+    @round += 1
     puts @response.split('').shuffle.join('')
     round = @round
     Winner.check(secret_code, guessed_code, round, rounds)
